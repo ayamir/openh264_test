@@ -4,6 +4,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <algorithm>
+#include <iostream>
 
 class BufferedData {
  public:
