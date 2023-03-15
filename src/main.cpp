@@ -294,8 +294,9 @@ int parseInt(string arg)
 
 int main(int argc, char const *argv[])
 {
-    int bps = parseInt(argv[1]);
-    isDiffEncoding = parseInt(argv[2]);
+    isDiffEncoding = parseInt(argv[1]);
+    int iMinQp = parseInt(argv[2]);
+    int iMaxQp = parseInt(argv[3]);
 
     // split weight log file into multiple files for each frame
     // const string weightLog = "weight.log";
@@ -309,7 +310,7 @@ int main(int argc, char const *argv[])
     param.iPicWidth = width;
     param.iPicHeight = height;
     param.iRCMode = RC_BITRATE_MODE;
-    param.iTargetBitrate = bps * 1000;
+    param.iTargetBitrate = width * height * 10;
     param.iMaxBitrate = UNSPECIFIED_BIT_RATE;
     param.bEnableFrameSkip = false;
     param.uiIntraPeriod = 3000;
@@ -334,6 +335,8 @@ int main(int argc, char const *argv[])
     param.sSpatialLayers[0].sSliceArgument.uiSliceMode = SM_SINGLE_SLICE;
     param.sSpatialLayers[0].uiProfileIdc = PRO_BASELINE;
     param.sSpatialLayers[0].uiLevelIdc = LEVEL_5_2;
+    param.iMinQp = iMinQp;
+    param.iMaxQp = iMaxQp;
 
     TestCallback cbk;
     BaseEncoderTest *pTest = new BaseEncoderTest();
