@@ -313,7 +313,7 @@ if %errorlevel% neq 0 goto :VCEnd</Command>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="D:\Code\cpp\openh264_test\main.cpp" />
+    <ClCompile Include="D:\Code\cpp\openh264_test\src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="D:\Code\cpp\openh264_test\build\ZERO_CHECK.vcxproj">
