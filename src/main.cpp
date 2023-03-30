@@ -19,13 +19,12 @@ namespace fs = std::filesystem;
 
 const string testbinDir = "../testbin/";
 const string weightsDir = testbinDir + "weights";
-const string inputFileName = testbinDir + "test.yuv";
-const string outDiffOnFileName = testbinDir + "out-with.h264";
-const string outDiffOffFileName = testbinDir + "out-without.h264";
+const string inputFileName = testbinDir + "cut.yuv";
 
-const int width = 1296;
-const int height = 1440;
-const float frameRate = 60;
+const int width = 1824;
+const int height = 1920;
+const float inputFps = 60;
+const float outputFps = 60;
 const int iWidthInMb = width / 16;
 const int iHeightInMb = height / 16;
 const int iArraySize = iWidthInMb * iHeightInMb;
@@ -91,10 +90,13 @@ struct TestCallback : public BaseEncoderTest::Callback
                     iLayerSize += pLayerInfo->pNalLengthInByte[iNalIndex];
                     iNalIndex--;
                 } while (iNalIndex >= 0);
-                FILE *fp = fopen(outFileName.c_str(), "ab");
-                assert(fp != NULL);
-                fwrite(pLayerInfo->pBsBuf, 1, iLayerSize, fp);
-                fclose(fp);
+                FILE *fp = nullptr;
+                if (fopen_s(&fp, outFileName.c_str(), "ab") == 0)
+                {
+                    assert(fp != nullptr);
+                    fwrite(pLayerInfo->pBsBuf, 1, iLayerSize, fp);
+                    fclose(fp);
+                }
             }
         }
     }
@@ -268,87 +270,129 @@ void splitWeightLog(const string &fileName, const string &weightsDir)
     weightLog.close();
 }
 
-int parseInt(string arg)
+int parseInt(const string &s)
 {
-    assert(!arg.empty());
+    assert(!s.empty());
     int res = 0;
     try
     {
         size_t pos;
-        res = stoi(arg, &pos);
-        if (pos < arg.size())
+        res = stoi(s, &pos);
+        if (pos < s.size())
         {
-            cerr << "Trailing characters after number: " << arg << '\n';
+            cerr << "Trailing characters after number: " << s << '\n';
         }
     }
-    catch (invalid_argument const &ex)
+    catch (invalid_argument const &)
     {
-        cerr << "Invalid number: " << arg << '\n';
+        cerr << "Invalid number: " << s << '\n';
     }
-    catch (out_of_range const &ex)
+    catch (out_of_range const &)
     {
-        cerr << "Number out of range: " << arg << '\n';
+        cerr << "Number out of range: " << s << '\n';
+    }
+    return res;
+}
+
+float parseFloat(const string &s)
+{
+    assert(!s.empty());
+    float res = 0.0;
+    try
+    {
+        size_t pos;
+        res = stof(s, &pos);
+        if (pos < s.size())
+        {
+            cerr << "Trailing characters after number: " << s << '\n';
+        }
+    }
+    catch (invalid_argument const &)
+    {
+        cerr << "Invalid number: " << s << '\n';
+    }
+    catch (out_of_range const &)
+    {
+        cerr << "Number out of range: " << s << '\n';
     }
     return res;
 }
 
 int main(int argc, char const *argv[])
 {
-    isDiffEncoding = parseInt(argv[1]);
-    int iMinQp = parseInt(argv[2]);
-    int iMaxQp = parseInt(argv[3]);
-
     // split weight log file into multiple files for each frame
-    // const string weightLog = "weight.log";
-    // const string weightsDir = "weights";
-    // splitWeightLog(weightLog, weightsDir);
+    const string weightsDir = testbinDir + "weights";
+    const string weightLog = testbinDir + "weight_cut.log";
+    if (!fs::is_directory(weightsDir))
+    {
+        fs::create_directory(weightsDir);
+        splitWeightLog(weightLog, weightsDir);
+    }
+
+    // parse input and process yuv file
+    isDiffEncoding = parseInt(argv[1]);
+    float targetBitrate = parseFloat(argv[2]);
 
     SEncParamExt param;
     memset(&param, 0, sizeof(SEncParamExt));
-    param.iUsageType = EUsageType::SCREEN_CONTENT_REAL_TIME;
-    param.fMaxFrameRate = frameRate;
+    param.iUsageType = EUsageType::CAMERA_VIDEO_REAL_TIME;
+    param.bSimulcastAVC = false;
     param.iPicWidth = width;
     param.iPicHeight = height;
-    param.iRCMode = RC_BITRATE_MODE;
-    param.iTargetBitrate = width * height * 10;
-    param.iMaxBitrate = UNSPECIFIED_BIT_RATE;
-    param.bEnableFrameSkip = false;
-    param.uiIntraPeriod = 3000;
-    param.eSpsPpsIdStrategy = EParameterSetStrategy::SPS_LISTING;
-    param.bPrefixNalAddingCtrl = false;
-    param.bSimulcastAVC = false;
-    param.bEnableDenoise = false;
-    param.bEnableBackgroundDetection = true;
-    param.bEnableSceneChangeDetect = true;
-    param.bEnableAdaptiveQuant = true;
-    param.bEnableLongTermReference = false;
-    param.iLtrMarkPeriod = 30;
-    param.bIsLosslessLink = false;
-    param.iComplexityMode = ECOMPLEXITY_MODE::LOW_COMPLEXITY;
-    param.iNumRefFrame = 1;
+    param.fMaxFrameRate = outputFps;
+    param.iTemporalLayerNum = 1;
+    param.uiIntraPeriod = 0;
+    param.eSpsPpsIdStrategy = EParameterSetStrategy::INCREASING_ID;
+    param.bEnableFrameCroppingFlag = 1;
     param.iEntropyCodingModeFlag = 0;
     param.uiMaxNalSize = 0;
-    param.iLTRRefNum = 0;
-    param.iMultipleThreadIdc = 1;
+    param.iComplexityMode = ECOMPLEXITY_MODE::LOW_COMPLEXITY;
     param.iLoopFilterDisableIdc = 0;
-    param.sSpatialLayers[0].sSliceArgument.uiSliceNum = 1;
-    param.sSpatialLayers[0].sSliceArgument.uiSliceMode = SM_SINGLE_SLICE;
-    param.sSpatialLayers[0].uiProfileIdc = PRO_BASELINE;
-    param.sSpatialLayers[0].uiLevelIdc = LEVEL_5_2;
-    param.iMinQp = iMinQp;
-    param.iMaxQp = iMaxQp;
+    param.iLoopFilterAlphaC0Offset = 0;
+    param.iLoopFilterBetaOffset = 0;
+    param.iMultipleThreadIdc = 1;
+    param.bUseLoadBalancing = true;
+    param.iRCMode = RC_BITRATE_MODE;
+    param.iTargetBitrate = 288000000;
+    param.iMaxBitrate = UNSPECIFIED_BIT_RATE;
+    param.bEnableFrameSkip = false;
+    param.iMaxQp = 51;
+    param.iMinQp = 0;
+    param.bEnableDenoise = false;
+    param.bEnableSceneChangeDetect = false;
+    param.bEnableBackgroundDetection = false;
+    param.bEnableAdaptiveQuant = false;
+    param.bEnableLongTermReference = false;
+    param.iLtrMarkPeriod = 30;
+    param.bPrefixNalAddingCtrl = false;
+    param.iSpatialLayerNum = 1;
+
+    SSpatialLayerConfig *pDLayer = &param.sSpatialLayers[0];
+    pDLayer->iVideoWidth = width;
+    pDLayer->iVideoHeight = height;
+    pDLayer->fFrameRate = outputFps;
+    pDLayer->uiProfileIdc = PRO_BASELINE;
+    pDLayer->iSpatialBitrate = (int)(targetBitrate * 1000 * 1000);
+    pDLayer->iMaxSpatialBitrate = UNSPECIFIED_BIT_RATE;
+    pDLayer->iDLayerQp = 24;
+    pDLayer->sSliceArgument.uiSliceMode = SM_SINGLE_SLICE;
+    // param.iMinQp = iMinQp;
+    // param.iMaxQp = iMaxQp;
+
+    const string diffSuffix = isDiffEncoding ? "-diff" : "";
+    // const string qpSuffix = "-minqp" + to_string(iMinQp) + "-maxqp" + to_string(iMaxQp);
+    // const string outFileName = testbinDir + "out" + diffSuffix + qpSuffix + ".h264";
+    const string outFileDir = testbinDir + to_string(targetBitrate) + "m/";
+    if (!fs::is_directory(outFileDir))
+    {
+        assert(fs::create_directory(outFileDir) == true);
+    }
+    const string outFileName = outFileDir + "out" + diffSuffix + ".h264";
 
     TestCallback cbk;
     BaseEncoderTest *pTest = new BaseEncoderTest();
     pTest->SetUp();
-    if (isDiffEncoding)
-    {
-        pTest->EncodeFile(inputFileName.c_str(), &param, &cbk, outDiffOnFileName);
-    }
-    else
-    {
-        pTest->EncodeFile(inputFileName.c_str(), &param, &cbk, outDiffOffFileName);
-    }
+    pTest->EncodeFile(inputFileName.c_str(), &param, &cbk, outFileName);
     pTest->TearDown();
 
     cout << "OK" << endl;

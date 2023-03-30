@@ -3,8 +3,6 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <gtest/gtest.h>
-#include "../sha1.h"
 
 static void ToHashStr (char* dst, const unsigned char* src, size_t src_len) {
   for (size_t i = 0; i < src_len; ++i) {
