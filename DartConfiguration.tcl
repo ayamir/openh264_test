@@ -4,14 +4,14 @@
 
 
 # Configuration directories and files
-SourceDirectory: D:/Code/cpp/openh264_test
-BuildDirectory: D:/Code/cpp/openh264_test
+SourceDirectory: C:/PersonalFiles/Code/MM/openh264_test
+BuildDirectory: C:/PersonalFiles/Code/MM/openh264_test
 
 # Where to place the cost data store
 CostDataFile: 
 
 # Site is something like machine.domain, i.e. pragmatic.crd
-Site: VRHub
+Site: G14
 
 # Build name is osname-revision-compiler, i.e. Linux-2.4.2-2smp-c++
 BuildName: Win32-MSBuild
@@ -21,12 +21,13 @@ LabelsForSubprojects:
 
 # Submission information
 SubmitURL: http://
+SubmitInactivityTimeout: 
 
 # Dashboard start time
 NightlyStartTime: 00:00:00 EDT
 
 # Commands for the build/test/submit cycle
-ConfigureCommand: "C:/Program Files/CMake/bin/cmake.exe" "D:/Code/cpp/openh264_test"
+ConfigureCommand: "C:/Program Files/CMake/bin/cmake.exe" "C:/PersonalFiles/Code/MM/openh264_test"
 MakeCommand: "C:\Program Files\CMake\bin\cmake.exe" --build . --config "${CTEST_CONFIGURATION_TYPE}"
 DefaultCTestConfigurationType: Release
 
@@ -44,7 +45,7 @@ SVNOptions:
 SVNUpdateOptions: 
 
 # Git options
-GITCommand: C:/Software/Development/Git/cmd/git.exe
+GITCommand: C:/Program Files/Git/cmd/git.exe
 GITInitSubmodules: 
 GITUpdateOptions: 
 GITUpdateCustom: 
@@ -57,13 +58,13 @@ P4UpdateOptions:
 P4UpdateCustom: 
 
 # Generic update command
-UpdateCommand: C:/Software/Development/Git/cmd/git.exe
+UpdateCommand: C:/Program Files/Git/cmd/git.exe
 UpdateOptions: 
 UpdateType: git
 
 # Compiler info
-Compiler: C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.33.31629/bin/HostX64/x64/cl.exe
-CompilerVersion: 19.33.31631.0
+Compiler: C:/Program Files/Microsoft Visual Studio/2022/Preview/VC/Tools/MSVC/14.39.33218/bin/Hostx64/x64/cl.exe
+CompilerVersion: 19.39.33218.0
 
 # Dynamic analysis (MemCheck)
 PurifyCommand: 
@@ -75,12 +76,12 @@ CudaSanitizerCommand:
 CudaSanitizerCommandOptions: 
 MemoryCheckType: 
 MemoryCheckSanitizerOptions: 
-MemoryCheckCommand: C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v11.0/bin/cuda-memcheck.exe
+MemoryCheckCommand: MEMORYCHECK_COMMAND-NOTFOUND
 MemoryCheckCommandOptions: 
 MemoryCheckSuppressionFile: 
 
 # Coverage
-CoverageCommand: C:/Software/Development/mingw64/bin/gcov.exe
+CoverageCommand: C:/ProgramData/chocolatey/bin/gcov.exe
 CoverageExtraFlags: -l
 
 # Testing options

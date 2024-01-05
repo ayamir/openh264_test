@@ -595,9 +595,6 @@ typedef struct TagEncParamExt {
   float* pPriorityArray;               ///<  Priority Array
   /* PriorityArray average weight */
   float  fAverageWeight;               ///<  Average weight
-  float fMaxWeight;                    ///<  Max weight
-  float fSumWeight;                    ///<  Sum weight
-  float fMbRcBitrateRatio;             ///<  MB RC bitrate ratio
 } SEncParamExt;
 
 /**

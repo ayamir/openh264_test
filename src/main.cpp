@@ -31,11 +31,9 @@ const int iArraySize = iWidthInMb * iHeightInMb;
 
 int isDiffEncoding = 0;
 
-class BaseEncoderTest
-{
-public:
-    struct Callback
-    {
+class BaseEncoderTest {
+  public:
+    struct Callback {
         virtual void onEncodeFrame(const SFrameBSInfo &frameInfo,
                                    const string &outFileName) = 0;
     };
@@ -45,54 +43,45 @@ public:
     void TearDown();
     void EncodeFile(const char *fileName, SEncParamExt *pEncParamExt,
                     Callback *cbk, const string &outFileName);
-    void EncodeStream(InputStream *in, SEncParamExt *pEncParamExt, Callback *cbk,
-                      const string &outFileName);
+    void EncodeStream(InputStream *in, SEncParamExt *pEncParamExt,
+                      Callback *cbk, const string &outFileName);
     void CheckWeightLog(const string &fileName, int width, int height);
-    void ReadPriorityArray(const string &fileName, float *priorityArray, int width,
-                           int height);
+    void ReadPriorityArray(const string &fileName, float *priorityArray,
+                           int width, int height);
 
     ISVCEncoder *encoder_;
 
-private:
+  private:
 };
 
-inline bool fileExists(const string &name)
-{
+inline bool fileExists(const string &name) {
     struct stat buffer;
     return (stat(name.c_str(), &buffer) == 0);
 }
 
-inline int countFiles(const fs::path &dir)
-{
+inline int countFiles(const fs::path &dir) {
     int count = 0;
-    for (auto &p : fs::directory_iterator(dir))
-    {
+    for (auto &p : fs::directory_iterator(dir)) {
         count++;
     }
     return count;
 }
 
-struct TestCallback : public BaseEncoderTest::Callback
-{
+struct TestCallback : public BaseEncoderTest::Callback {
     virtual void onEncodeFrame(const SFrameBSInfo &frameInfo,
-                               const string &outFileName)
-    {
+                               const string &outFileName) {
         int iLayer = 0;
-        while (iLayer < frameInfo.iLayerNum)
-        {
+        while (iLayer < frameInfo.iLayerNum) {
             const SLayerBSInfo *pLayerInfo = &frameInfo.sLayerInfo[iLayer++];
-            if (pLayerInfo)
-            {
+            if (pLayerInfo) {
                 int iLayerSize = 0;
                 int iNalIndex = pLayerInfo->iNalCount - 1;
-                do
-                {
+                do {
                     iLayerSize += pLayerInfo->pNalLengthInByte[iNalIndex];
                     iNalIndex--;
                 } while (iNalIndex >= 0);
                 FILE *fp = nullptr;
-                if (fopen_s(&fp, outFileName.c_str(), "ab") == 0)
-                {
+                if (fopen_s(&fp, outFileName.c_str(), "ab") == 0) {
                     assert(fp != nullptr);
                     fwrite(pLayerInfo->pBsBuf, 1, iLayerSize, fp);
                     fclose(fp);
@@ -104,8 +93,7 @@ struct TestCallback : public BaseEncoderTest::Callback
 
 BaseEncoderTest::BaseEncoderTest() : encoder_(NULL) {}
 
-void BaseEncoderTest::SetUp()
-{
+void BaseEncoderTest::SetUp() {
     int rv = WelsCreateSVCEncoder(&encoder_);
     assert(rv == cmResultSuccess);
     assert(encoder_ != NULL);
@@ -114,18 +102,15 @@ void BaseEncoderTest::SetUp()
     encoder_->SetOption(ENCODER_OPTION_TRACE_LEVEL, &uiTraceLevel);
 }
 
-void BaseEncoderTest::TearDown()
-{
-    if (encoder_)
-    {
+void BaseEncoderTest::TearDown() {
+    if (encoder_) {
         encoder_->Uninitialize();
         WelsDestroySVCEncoder(encoder_);
     }
 }
 
 void BaseEncoderTest::EncodeStream(InputStream *in, SEncParamExt *pEncParamExt,
-                                   Callback *cbk, const string &outFileName)
-{
+                                   Callback *cbk, const string &outFileName) {
     assert(NULL != pEncParamExt);
 
     int rv = encoder_->InitializeExt(pEncParamExt);
@@ -151,29 +136,25 @@ void BaseEncoderTest::EncodeStream(InputStream *in, SEncParamExt *pEncParamExt,
     pic.pData[0] = buf.data();
     pic.pData[1] =
         pic.pData[0] + pEncParamExt->iPicWidth * pEncParamExt->iPicHeight;
-    pic.pData[2] =
-        pic.pData[1] + (pEncParamExt->iPicWidth * pEncParamExt->iPicHeight >> 2);
+    pic.pData[2] = pic.pData[1] +
+                   (pEncParamExt->iPicWidth * pEncParamExt->iPicHeight >> 2);
 
     int i = 1;
-    while (in->read(buf.data(), frameSize) == frameSize)
-    {
+    while (in->read(buf.data(), frameSize) == frameSize) {
         int rv = -1;
-        if (isDiffEncoding)
-        {
+        if (isDiffEncoding) {
 
             float priorityArray[iArraySize];
             float fAverageWeight = 0.0;
             const string weightLog = weightsDir + "/" + to_string(i++) + ".txt";
-            ReadPriorityArray(weightLog, priorityArray, iWidthInMb, iHeightInMb);
+            ReadPriorityArray(weightLog, priorityArray, iWidthInMb,
+                              iHeightInMb);
             rv = encoder_->EncodeFrame(&pic, &info, priorityArray);
-        }
-        else
-        {
+        } else {
             rv = encoder_->EncodeFrame(&pic, &info);
         }
         assert(rv == cmResultSuccess);
-        if (info.eFrameType != videoFrameTypeSkip)
-        {
+        if (info.eFrameType != videoFrameTypeSkip) {
             cbk->onEncodeFrame(info, outFileName);
         }
     }
@@ -181,39 +162,35 @@ void BaseEncoderTest::EncodeStream(InputStream *in, SEncParamExt *pEncParamExt,
 
 void BaseEncoderTest::EncodeFile(const char *fileName,
                                  SEncParamExt *pEncParamExt, Callback *cbk,
-                                 const string &outFileName)
-{
+                                 const string &outFileName) {
     FileInputStream fileStream;
     bool res = fileStream.Open(fileName);
-    if (fileExists(outFileName))
-    {
+    if (fileExists(outFileName)) {
         int removeRes = remove(outFileName.c_str());
         assert(removeRes == 0);
-        cout << "Removed existing file before encoding: " << outFileName << endl;
+        cout << "Removed existing file before encoding: " << outFileName
+             << endl;
     }
     assert(res == true);
     EncodeStream(&fileStream, pEncParamExt, cbk, outFileName);
 }
 
 // check if the weight log file is valid
-void BaseEncoderTest::CheckWeightLog(const string &fileName, int width, int height)
-{
+void BaseEncoderTest::CheckWeightLog(const string &fileName, int width,
+                                     int height) {
     ifstream weightLog(fileName.c_str());
     string line;
     int lineNum = 0;
-    while (getline(weightLog, line))
-    {
+    while (getline(weightLog, line)) {
         lineNum++;
-        if (line.empty())
-        {
+        if (line.empty()) {
             continue;
         }
 
         float num = 0;
         int colNum = 0;
         stringstream ss(line);
-        while (ss >> num)
-        {
+        while (ss >> num) {
             colNum++;
         }
         assert(colNum == width);
@@ -224,44 +201,38 @@ void BaseEncoderTest::CheckWeightLog(const string &fileName, int width, int heig
 }
 
 // read just one priority array from one file
-void BaseEncoderTest::ReadPriorityArray(const string &fileName, float *priorityArray, int width,
-                                        int height)
-{
+void BaseEncoderTest::ReadPriorityArray(const string &fileName,
+                                        float *priorityArray, int width,
+                                        int height) {
     // CheckWeightLog(fileName, width, height);
 
     ifstream file(fileName.c_str());
     string line;
-    while (getline(file, line))
-    {
-        if (line.empty())
-        {
+    while (getline(file, line)) {
+        if (line.empty()) {
             continue;
         }
 
         float num = 0;
         stringstream ss(line);
-        while (ss >> num)
-        {
+        while (ss >> num) {
             *priorityArray++ = num;
         }
     }
     file.close();
 }
 
-void splitWeightLog(const string &fileName, const string &weightsDir)
-{
+void splitWeightLog(const string &fileName, const string &weightsDir) {
     ifstream weightLog(fileName.c_str());
     string line;
     int frameNum = 1;
 
-    while (getline(weightLog, line))
-    {
+    while (getline(weightLog, line)) {
         // write line to file with name: <weightsDir>/<frameNum>.txt
         string targetFileName = weightsDir + "/" + to_string(frameNum) + ".txt";
         fstream targetFile(targetFileName.c_str(), ios::app);
         targetFile << line << endl;
-        if (line == "")
-        {
+        if (line == "") {
             frameNum++;
         }
         targetFile.close();
@@ -270,61 +241,45 @@ void splitWeightLog(const string &fileName, const string &weightsDir)
     weightLog.close();
 }
 
-int parseInt(const string &s)
-{
+int parseInt(const string &s) {
     assert(!s.empty());
     int res = 0;
-    try
-    {
+    try {
         size_t pos;
         res = stoi(s, &pos);
-        if (pos < s.size())
-        {
+        if (pos < s.size()) {
             cerr << "Trailing characters after number: " << s << '\n';
         }
-    }
-    catch (invalid_argument const &)
-    {
+    } catch (invalid_argument const &) {
         cerr << "Invalid number: " << s << '\n';
-    }
-    catch (out_of_range const &)
-    {
+    } catch (out_of_range const &) {
         cerr << "Number out of range: " << s << '\n';
     }
     return res;
 }
 
-float parseFloat(const string &s)
-{
+float parseFloat(const string &s) {
     assert(!s.empty());
     float res = 0.0;
-    try
-    {
+    try {
         size_t pos;
         res = stof(s, &pos);
-        if (pos < s.size())
-        {
+        if (pos < s.size()) {
             cerr << "Trailing characters after number: " << s << '\n';
         }
-    }
-    catch (invalid_argument const &)
-    {
+    } catch (invalid_argument const &) {
         cerr << "Invalid number: " << s << '\n';
-    }
-    catch (out_of_range const &)
-    {
+    } catch (out_of_range const &) {
         cerr << "Number out of range: " << s << '\n';
     }
     return res;
 }
 
-int main(int argc, char const *argv[])
-{
+int main(int argc, char const *argv[]) {
     // split weight log file into multiple files for each frame
     const string weightsDir = testbinDir + "weights";
     const string weightLog = testbinDir + "weight_cut.log";
-    if (!fs::is_directory(weightsDir))
-    {
+    if (!fs::is_directory(weightsDir)) {
         fs::create_directory(weightsDir);
         splitWeightLog(weightLog, weightsDir);
     }
@@ -380,11 +335,11 @@ int main(int argc, char const *argv[])
     // param.iMaxQp = iMaxQp;
 
     const string diffSuffix = isDiffEncoding ? "-diff" : "";
-    // const string qpSuffix = "-minqp" + to_string(iMinQp) + "-maxqp" + to_string(iMaxQp);
-    // const string outFileName = testbinDir + "out" + diffSuffix + qpSuffix + ".h264";
+    // const string qpSuffix = "-minqp" + to_string(iMinQp) + "-maxqp" +
+    // to_string(iMaxQp); const string outFileName = testbinDir + "out" +
+    // diffSuffix + qpSuffix + ".h264";
     const string outFileDir = testbinDir + to_string(targetBitrate) + "m/";
-    if (!fs::is_directory(outFileDir))
-    {
+    if (!fs::is_directory(outFileDir)) {
         assert(fs::create_directory(outFileDir) == true);
     }
     const string outFileName = outFileDir + "out" + diffSuffix + ".h264";

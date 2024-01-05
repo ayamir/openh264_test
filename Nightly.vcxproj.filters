@@ -1,17 +1,17 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <CustomBuild Include="D:\Code\cpp\openh264_test\CMakeFiles\7340c0fee6e155640a60e8e144031c6d\Nightly.rule">
+    <CustomBuild Include="C:\PersonalFiles\Code\MM\openh264_test\CMakeFiles\b48733c503805baeffffb9abf7d6881f\Nightly.rule">
       <Filter>CMake Rules</Filter>
     </CustomBuild>
-    <CustomBuild Include="D:\Code\cpp\openh264_test\CMakeLists.txt" />
+    <CustomBuild Include="C:\PersonalFiles\Code\MM\openh264_test\CMakeLists.txt" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="D:\Code\cpp\openh264_test\CMakeFiles\Nightly" />
+    <None Include="C:\PersonalFiles\Code\MM\openh264_test\CMakeFiles\Nightly" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="CMake Rules">
-      <UniqueIdentifier>{3EBB2AC9-A322-3260-A5B7-5953CD601780}</UniqueIdentifier>
+      <UniqueIdentifier>{19C0A284-DF54-39CE-BE57-F70F328172FC}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
