@@ -20,6 +20,8 @@ namespace fs = std::filesystem;
 const string testbinDir = "../testbin/";
 const string weightsDir = testbinDir + "weights";
 const string inputFileName = testbinDir + "cut.yuv";
+const string h264Suffix = ".h264";
+const string mp4Suffix = ".mp4";
 
 const int width = 1824;
 const int height = 1920;
@@ -275,6 +277,14 @@ float parseFloat(const string &s) {
     return res;
 }
 
+int h264ToMp4(const string h264File) {
+    const string h264FileName = h264File + h264Suffix;
+    const string mp4FileName = h264File + mp4Suffix;
+    const string ffmpegCommand = "ffmpeg -framerate " + to_string(inputFps) + " -i " + h264FileName + " -c copy " + mp4FileName;
+    int ret = system(ffmpegCommand.c_str());
+    return ret;
+}
+
 int main(int argc, char const *argv[]) {
     // split weight log file into multiple files for each frame
     const string weightsDir = testbinDir + "weights";
@@ -342,15 +352,15 @@ int main(int argc, char const *argv[]) {
     if (!fs::is_directory(outFileDir)) {
         assert(fs::create_directory(outFileDir) == true);
     }
-    const string outFileName = outFileDir + "out" + diffSuffix + ".h264";
+    const string outFile = outFileDir + "out" + diffSuffix;
 
     TestCallback cbk;
     BaseEncoderTest *pTest = new BaseEncoderTest();
     pTest->SetUp();
-    pTest->EncodeFile(inputFileName.c_str(), &param, &cbk, outFileName);
+    pTest->EncodeFile(inputFileName.c_str(), &param, &cbk, outFile + h264Suffix);
     pTest->TearDown();
 
-    cout << "OK" << endl;
+    assert(h264ToMp4(outFile) == 0);
 
     return 0;
 }
