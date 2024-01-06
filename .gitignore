@@ -423,3 +423,4 @@ CTestTestfile.cmake
 _deps
 
 testbin
+*.txt
