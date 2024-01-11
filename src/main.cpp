@@ -100,7 +100,7 @@ void BaseEncoderTest::SetUp() {
     assert(rv == cmResultSuccess);
     assert(encoder_ != NULL);
 
-    unsigned int uiTraceLevel = WELS_LOG_INFO;
+    unsigned int uiTraceLevel = WELS_LOG_DEBUG;
     encoder_->SetOption(ENCODER_OPTION_TRACE_LEVEL, &uiTraceLevel);
 }
 
